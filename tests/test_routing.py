@@ -1020,3 +1020,19 @@ def test_host_named_repr() -> None:
     )
     # test for substring because repr(Router) returns unique object ID
     assert repr(route).startswith("Host(host='example.com', name='app', app=")
+
+
+@pytest.mark.parametrize("endpoint", ["/path/2^2", "/path/2+2", "/path/2.2"])
+def test_router_with_float(endpoint, test_client_factory):
+    async def test_homepage(request):
+        return JSONResponse(request.path_params)
+
+    test_app = Starlette(
+        debug=True,
+        routes=[
+            Route("/path/{number:float}", test_homepage),
+        ],
+    )
+    client = test_client_factory(test_app)
+    response = client.get(endpoint)
+    assert response.status_code == 200
